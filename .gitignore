@@ -1,1 +1,8 @@
 watch
+a.out
+pbzip2
+*.bc
+*.1
+*.s
+*.spec
+*.o
