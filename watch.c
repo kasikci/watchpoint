@@ -9,6 +9,8 @@
 #include <sys/wait.h>
 #include <sys/user.h>
 
+int var;
+
 enum {
   DR7_BREAK_ON_EXEC  = 0,
   DR7_BREAK_ON_WRITE = 1,
@@ -60,7 +62,7 @@ int watchpoint(void* addr, sighandler_t handler) {
 
   if ((child = fork()) == 0) {
     int retval = EXIT_SUCCESS;
-    printf("childpid: %d\n", getpid());
+
     dr7_t dr7 = {0};
     dr7.l0 = 1;
     dr7.rw0 = DR7_BREAK_ON_WRITE;
@@ -71,7 +73,7 @@ int watchpoint(void* addr, sighandler_t handler) {
     }
 
     wait(NULL);
-    if (ptrace(PTRACE_POKEUSER, parent, offsetof(struct user, u_debugreg[0]), addr)) {
+    if (ptrace(PTRACE_POKEUSER, parent, offsetof(struct user, u_debugreg[0]), (void*)&var)) {
       retval = EXIT_FAILURE;
     }
     
@@ -95,10 +97,8 @@ int watchpoint(void* addr, sighandler_t handler) {
   return 0;
 }
 
-int var;
-
 void trap(int sig, siginfo_t* info, void* context) {
-  printf("new value: %d handler: %d \n", var, getpid());
+  printf("new value: %d\n", var);
 }
 
 int main(int argc, char * argv[]) {
@@ -108,7 +108,7 @@ int main(int argc, char * argv[]) {
 
   watchpoint(&var, trap);
 
-  for (i = 0; i < 100; i++) {
+  for (i = 0; i < 10000; i++) {
     var++;
   }
 
