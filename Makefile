@@ -1,2 +1,2 @@
 all:
-	gcc watch.c -o watch 
+	g++ watch.cpp -o watch 
